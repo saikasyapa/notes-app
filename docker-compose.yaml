@@ -1,3 +1,46 @@
+# version: "3.8"
+
+# services:
+#   backend:
+#     build: ./backend
+#     container_name: flask_backend
+#     restart: always
+#     ports:
+#       - "5000:5000"
+#     depends_on:
+#       - db
+#     environment:
+#       FLASK_ENV: development
+#       DATABASE_URL: postgresql://postgres:123@10.10.10.163:5432/notesdb
+
+#   frontend:
+#     build: ./frontend
+#     container_name: react_frontend
+#     restart: always
+#     ports:
+#       - "3000:3000"
+#     depends_on:
+#       - backend
+#     environment:
+#       REACT_APP_API_URL: http://localhost:5000
+
+#   db:
+#     image: postgres:13
+#     container_name: postgres_db
+#     restart: always
+#     environment:
+#       POSTGRES_USER: postgres
+#       POSTGRES_PASSWORD: 123
+#       POSTGRES_DB: notesdb
+#       POSTGRES_HOST: 10.10.10.163
+#     ports:
+#       - "5432:5432"
+#     volumes:
+#       - pg_data:/var/lib/postgresql/data
+
+# volumes:
+#   pg_data:
+
 version: "3.8"
 
 services:
@@ -11,7 +54,7 @@ services:
       - db
     environment:
       FLASK_ENV: development
-      DATABASE_URL: postgresql://postgres:123@10.10.10.163:5432/notesdb
+      DATABASE_URL: postgresql://postgres:saikasyapa@database-2.climgmeu4ove.ap-south-1.rds.amazonaws.com:5432/notesdb
 
   frontend:
     build: ./frontend
@@ -30,9 +73,9 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 123
+      POSTGRES_PASSWORD: saikasyapa
       POSTGRES_DB: notesdb
-      POSTGRES_HOST: 10.10.10.163
+      POSTGRES_HOST: database-2.climgmeu4ove.ap-south-1.rds.amazonaws.com
     ports:
       - "5432:5432"
     volumes:
@@ -40,3 +83,4 @@ services:
 
 volumes:
   pg_data:
+
