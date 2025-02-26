@@ -10,43 +10,32 @@ phases:
   install:
     commands:
       - echo "Checking changed files..."
-      - chmod +x detect_changes.sh && ./detect_changes.sh
 
   pre_build:
     commands:
-      - echo "Logging into Amazon ECR..."
-      - if [ -f env.sh ]; then source env.sh; else echo "Error: env.sh not found!"; exit 1; fi
-      - echo "FRONTEND_BUILD=$FRONTEND_BUILD"
-      - echo "BACKEND_BUILD=$BACKEND_BUILD"
       - echo "Logging into Amazon ECR..."
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_FRONTEND
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_BACKEND
 
   build:
     commands:
-      - if [ "$FRONTEND_BUILD" == "1" ]; then
-          echo "Building frontend Docker image...";
-          docker build -t $ECR_FRONTEND:latest frontend/;
-          docker tag $ECR_FRONTEND:latest $ECR_FRONTEND:$CODEBUILD_RESOLVED_SOURCE_VERSION;
-        fi
-      - if [ "$BACKEND_BUILD" == "1" ]; then
-          echo "Building backend Docker image...";
-          docker build -t $ECR_BACKEND:latest backend/;
-          docker tag $ECR_BACKEND:latest $ECR_BACKEND:$CODEBUILD_RESOLVED_SOURCE_VERSION;
-        fi
+      echo "Building frontend Docker image...";
+      docker build -t $ECR_FRONTEND:latest frontend/;
+      docker tag $ECR_FRONTEND:latest $ECR_FRONTEND:$CODEBUILD_RESOLVED_SOURCE_VERSION;
+      echo "Building backend Docker image...";
+      docker build -t $ECR_BACKEND:latest backend/;
+      docker tag $ECR_BACKEND:latest $ECR_BACKEND:$CODEBUILD_RESOLVED_SOURCE_VERSION;
+        
 
   post_build:
     commands:
-      - if [ "$FRONTEND_BUILD" == "1" ]; then
-          echo "Pushing frontend image to ECR...";
-          docker push $ECR_FRONTEND:latest;
-          docker push $ECR_FRONTEND:$CODEBUILD_RESOLVED_SOURCE_VERSION;
-        fi
-      - if [ "$BACKEND_BUILD" == "1" ]; then
-          echo "Pushing backend image to ECR...";
-          docker push $ECR_BACKEND:latest;
-          docker push $ECR_BACKEND:$CODEBUILD_RESOLVED_SOURCE_VERSION;
-        fi
+      echo "Pushing frontend image to ECR...";
+      docker push $ECR_FRONTEND:latest;
+      docker push $ECR_FRONTEND:$CODEBUILD_RESOLVED_SOURCE_VERSION;
+      echo "Pushing backend image to ECR...";
+      docker push $ECR_BACKEND:latest;
+      docker push $ECR_BACKEND:$CODEBUILD_RESOLVED_SOURCE_VERSION;
+
 
 artifacts:
   files: "**/*"
