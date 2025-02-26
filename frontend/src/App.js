@@ -24,6 +24,13 @@ function App() {
       .catch(error => console.error("Error adding note:", error));
   };
 
+  const deleteNote = (id) => {
+    axios
+      .delete(`${API_URL}/notes/${id}`)
+      .then(() => fetchNotes())
+      .catch((error) => console.error("Error deleting note:", error));
+  };
+
   return (
     <div>
       <h1>Notes App</h1>
@@ -34,6 +41,7 @@ function App() {
         {notes.map((note) => (
           <li key={note.id}>
             <strong>{note.title}</strong>: {note.content}
+            <button onClick={() => deleteNote(note.id)}>Delete</button>
           </li>
         ))}
       </ul>
