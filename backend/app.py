@@ -77,15 +77,6 @@ def add_note():
     db.session.commit()
     return jsonify({"message": "Note added"}), 201
 
-# 🔥 NEW DELETE ENDPOINT ADDED
-@app.route("/notes/<int:id>", methods=["DELETE"])
-def delete_note(id):
-    note = Note.query.get(id)
-    if note:
-        db.session.delete(note)
-        db.session.commit()
-        return jsonify({"message": "Note deleted"}), 200
-    return jsonify({"error": "Note not found"}), 404
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)

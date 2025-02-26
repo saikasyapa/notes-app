@@ -7,6 +7,7 @@ function App() {
   const [notes, setNotes] = useState([]);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
     axios.get(`${API_URL}/notes`)
@@ -23,16 +24,13 @@ function App() {
       })
       .catch(error => console.error("Error adding note:", error));
   };
-
-  const deleteNote = (id) => {
-    axios
-      .delete(`${API_URL}/notes/${id}`)
-      .then(() => fetchNotes())
-      .catch((error) => console.error("Error deleting note:", error));
-  };
+  
 
   return (
-    <div>
+    <div className={darkMode ? "dark-mode" : "light-mode"}>
+      <button onClick={() => setDarkMode(!darkMode)}>
+        {darkMode ? "Light Mode" : "Dark Mode"}
+      </button>
       <h1>Notes App</h1>
       <input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
       <textarea placeholder="Content" value={content} onChange={(e) => setContent(e.target.value)} />
@@ -41,10 +39,28 @@ function App() {
         {notes.map((note) => (
           <li key={note.id}>
             <strong>{note.title}</strong>: {note.content}
-            <button onClick={() => deleteNote(note.id)}>Delete</button>
           </li>
         ))}
       </ul>
+      <style>
+        {`
+          body {
+            transition: background 0.3s ease-in-out;
+          }
+          .dark-mode {
+            background-color: #333;
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+          }
+          .light-mode {
+            background-color: #fff;
+            color: black;
+            min-height: 100vh;
+            padding: 20px;
+          }
+        `}
+      </style>
     </div>
   );
 }
