@@ -15,7 +15,7 @@ phases:
   pre_build:
     commands:
       - echo "Logging into Amazon ECR..."
-      - if [ -f env.sh ]; then source env.sh; fi
+      - if [ -f env.sh ]; then source env.sh; else echo "Error: env.sh not found!"; exit 1; fi
       - echo "FRONTEND_BUILD=$FRONTEND_BUILD"
       - echo "BACKEND_BUILD=$BACKEND_BUILD"
       - echo "Logging into Amazon ECR..."
