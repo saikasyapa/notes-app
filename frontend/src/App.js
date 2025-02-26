@@ -88,7 +88,7 @@ function App() {
             margin-bottom: 20px;
           }
           .add-button:hover {
-            background-color: #0056b3;
+            background-color:rgb(179, 66, 0);
           }
           .notes-list {
             list-style: none;
