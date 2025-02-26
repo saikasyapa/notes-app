@@ -80,7 +80,7 @@ function App() {
             display: block;
             width: 100%;
             padding: 10px;
-            background-color: #007bff;
+            background-color:rgb(0, 255, 106);
             color: white;
             border: none;
             border-radius: 5px;
