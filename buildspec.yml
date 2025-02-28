@@ -3,28 +3,39 @@ version: 0.2
 env:
   variables:
     AWS_REGION: "ap-south-1"
-    ECR_FRONTEND: "970547333335.dkr.ecr.ap-south-1.amazonaws.com/frontend"
-    ECR_BACKEND: "970547333335.dkr.ecr.ap-south-1.amazonaws.com/backend"
+    ECR_FRONTEND: "970547333335.dkr.ecr.ap-south-1.amazonaws.com/notes-frontend"
+    ECR_BACKEND: "970547333335.dkr.ecr.ap-south-1.amazonaws.com/notes-backend"
 
 phases:
+  install:
+    commands:
+      - echo "Checking changed files..."
+
   pre_build:
     commands:
-      - echo "Retrieving Git commit SHA..."
-      - export GIT_COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c1-7)
-      - echo "Git Commit Hash: $GIT_COMMIT_HASH"
-
       - echo "Logging into Amazon ECR..."
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_FRONTEND
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_BACKEND
 
   build:
     commands:
-      - echo "Building Docker images..."
-      - docker build -t $ECR_FRONTEND:$GIT_COMMIT_HASH frontend/
-      - docker build -t $ECR_BACKEND:$GIT_COMMIT_HASH backend/
+      echo "Building frontend Docker image...";
+      docker build -t $ECR_FRONTEND:latest frontend/;
+      docker tag $ECR_FRONTEND:latest $ECR_FRONTEND:$CODEBUILD_RESOLVED_SOURCE_VERSION;
+      echo "Building backend Docker image...";
+      docker build -t $ECR_BACKEND:latest backend/;
+      docker tag $ECR_BACKEND:latest $ECR_BACKEND:$CODEBUILD_RESOLVED_SOURCE_VERSION;
+        
 
   post_build:
     commands:
-      - echo "Pushing images to Amazon ECR..."
-      - docker push $ECR_FRONTEND:$GIT_COMMIT_HASH
-      - docker push $ECR_BACKEND:$GIT_COMMIT_HASH
+      echo "Pushing frontend image to ECR...";
+      docker push $ECR_FRONTEND:latest;
+      docker push $ECR_FRONTEND:$CODEBUILD_RESOLVED_SOURCE_VERSION;
+      echo "Pushing backend image to ECR...";
+      docker push $ECR_BACKEND:latest;
+      docker push $ECR_BACKEND:$CODEBUILD_RESOLVED_SOURCE_VERSION;
+
+
+artifacts:
+  files: "**/*"
