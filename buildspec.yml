@@ -5,11 +5,18 @@ env:
     AWS_REGION: "ap-south-1"
     ECR_FRONTEND: "970547333335.dkr.ecr.ap-south-1.amazonaws.com/frontend"
     ECR_BACKEND: "970547333335.dkr.ecr.ap-south-1.amazonaws.com/backend"
+    KUBERNETES_DEPLOYMENT_FRONTEND: "frontend"
+    KUBERNETES_DEPLOYMENT_BACKEND: "backend"
+    KUBERNETES_NAMESPACE: "default"
+    CLUSTER_NAME: "notes-app"
 
 phases:
   install:
     commands:
-      - echo "Checking changed files..."
+      - echo "Installing AWS CLI and Kubectl..."
+      - apt-get update && apt-get install -y awscli
+      - curl -o kubectl https://s3.amazonaws.com/aws-cli/awscli-bundle.zip
+      - chmod +x kubectl && mv kubectl /usr/local/bin/
 
   pre_build:
     commands:
@@ -19,23 +26,40 @@ phases:
 
   build:
     commands:
-      echo "Building frontend Docker image...";
-      docker build -t $ECR_FRONTEND:latest frontend/;
-      docker tag $ECR_FRONTEND:latest $ECR_FRONTEND:$CODEBUILD_RESOLVED_SOURCE_VERSION;
-      echo "Building backend Docker image...";
-      docker build -t $ECR_BACKEND:latest backend/;
-      docker tag $ECR_BACKEND:latest $ECR_BACKEND:$CODEBUILD_RESOLVED_SOURCE_VERSION;
-        
+      - echo "Building frontend Docker image..."
+      - docker build -t $ECR_FRONTEND:latest frontend/
+      - docker tag $ECR_FRONTEND:latest $ECR_FRONTEND:$CODEBUILD_RESOLVED_SOURCE_VERSION
+
+      - echo "Building backend Docker image..."
+      - docker build -t $ECR_BACKEND:latest backend/
+      - docker tag $ECR_BACKEND:latest $ECR_BACKEND:$CODEBUILD_RESOLVED_SOURCE_VERSION
 
   post_build:
     commands:
-      echo "Pushing frontend image to ECR...";
-      docker push $ECR_FRONTEND:latest;
-      docker push $ECR_FRONTEND:$CODEBUILD_RESOLVED_SOURCE_VERSION;
-      echo "Pushing backend image to ECR...";
-      docker push $ECR_BACKEND:latest;
-      docker push $ECR_BACKEND:$CODEBUILD_RESOLVED_SOURCE_VERSION;
+      - echo "Pushing frontend image to ECR..."
+      - docker push $ECR_FRONTEND:latest
+      - docker push $ECR_FRONTEND:$CODEBUILD_RESOLVED_SOURCE_VERSION
 
+      - echo "Pushing backend image to ECR..."
+      - docker push $ECR_BACKEND:latest
+      - docker push $ECR_BACKEND:$CODEBUILD_RESOLVED_SOURCE_VERSION
 
-artifacts:
-  files: "**/*"
+      - echo "Updating Kubeconfig for EKS..."
+      - aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+
+      - echo "Deploying new images to EKS..."
+      - kubectl set image deployment/$KUBERNETES_DEPLOYMENT_FRONTEND frontend=$ECR_FRONTEND:$CODEBUILD_RESOLVED_SOURCE_VERSION -n $KUBERNETES_NAMESPACE
+      - kubectl set image deployment/$KUBERNETES_DEPLOYMENT_BACKEND backend=$ECR_BACKEND:$CODEBUILD_RESOLVED_SOURCE_VERSION -n $KUBERNETES_NAMESPACE
+
+      - echo "Waiting for deployment to complete..."
+      - kubectl rollout status deployment/$KUBERNETES_DEPLOYMENT_FRONTEND -n $KUBERNETES_NAMESPACE
+      - kubectl rollout status deployment/$KUBERNETES_DEPLOYMENT_BACKEND -n $KUBERNETES_NAMESPACE
+
+      - echo "Verifying deployment..."
+      - if kubectl get pods -n $KUBERNETES_NAMESPACE | grep -q 'CrashLoopBackOff\|Error\|ImagePullBackOff'; then
+          echo "Deployment failed, rolling back...";
+          kubectl rollout undo deployment/$KUBERNETES_DEPLOYMENT_FRONTEND -n $KUBERNETES_NAMESPACE;
+          kubectl rollout undo deployment/$KUBERNETES_DEPLOYMENT_BACKEND -n $KUBERNETES_NAMESPACE;
+        else
+          echo "Deployment successful!";
+        fi
