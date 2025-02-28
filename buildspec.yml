@@ -3,8 +3,8 @@ version: 0.2
 env:
   variables:
     AWS_REGION: "ap-south-1"
-    ECR_FRONTEND: "970547333335.dkr.ecr.ap-south-1.amazonaws.com/notes-frontend"
-    ECR_BACKEND: "970547333335.dkr.ecr.ap-south-1.amazonaws.com/notes-backend"
+    ECR_FRONTEND: "970547333335.dkr.ecr.ap-south-1.amazonaws.com/frontend"
+    ECR_BACKEND: "970547333335.dkr.ecr.ap-south-1.amazonaws.com/backend"
 
 phases:
   install:
